@@ -1,0 +1,149 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{../Zhihu}
+\title{数字电路学习笔记（六）：组合逻辑电路}
+\begin{document}
+\maketitle
+注：由于作者对硬件了解有限，本文不会强调各类逻辑门的硬件实现，而侧重于理论的设计。（也不排除在我搞懂半导体后回来填坑的可能；虽然即使是我毕业于半导体专业的的物理老师，也只是推荐我一本《半导体物理》而已）
+
+组合逻辑，就是之前讲过的黑箱逻辑。
+
+\begin{figure}
+\begin{tikzpicture}[scale=1]
+    \draw (0,0) -- (0,3.6) -- (2.5,3.6) -- (2.5,0) -- cycle;
+    \node at (1.25,1.8) {$a=f(x,y,z)$};
+    \draw (-0.7,0.9) node[above] {$z$} -- (0,0.9);
+    \draw (-0.7,1.8) node[above] {$y$} -- (0,1.8);
+    \draw (-0.7,2.7) node[above] {$x$} -- (0,2.7);
+    \draw (2.5,1.8) -- (3.2,1.8) node[above] {$a$};
+\end{tikzpicture}
+\end{figure}
+
+如果一个电路的输入是$x$, $y$, $z$，输出是$a$，则某一时刻的$a$只由那一时刻的$x$, $y$, $z$的值决定。就像一个“直肠子”，信号随进随出，不会影响其后的输出。我们可以这样形式化地表示组合逻辑：
+
+\[y=f(x_1,x_2,\dots,x_n)\]
+
+其中$y$为输出，$x_1,x_2,\dots,x_n$为输入。有时电路不止有一个输出，但我们可以把它简单地看成若干电路的拼接。组合逻辑设计的关键之处，就在于找出这个函数关系$f$。
+
+\section*{一、组合逻辑电路的设计}
+
+相信我，这是我最后一次用这个事例：
+
+\begin{quote}
+某档案室有三把钥匙，分别由主任与两个保管员保管。主任的钥匙可以直接开门，而两个保管员的钥匙则只有同时插入才能开门。档案室大门还有一个防盗装置，激活时无论什么钥匙都无法开门。
+\end{quote}
+
+这是文字表述的任务要求；在第三节中，我们写出了逻辑式：$X=(A+BC)\cdot D'$，并在第五节中，介绍了许多得出逻辑式的方法。无论如何，我们已经有了一个逻辑式。
+
+接下来，画出逻辑图：
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{logic ports=ieee}
+        \node[scale={1/0.7}] at (0,3) (a) {$A$};
+        \node[scale={1/0.7}] at (0,2) (b) {$B$};
+        \node[scale={1/0.7}] at (0,1) (c) {$C$};
+        \node[scale={1/0.7}] at (0,0) (d) {$D$};
+        \draw (2.5,1.5) node[and port] (and1) {};
+        \draw (5,2.25) node[or port] (or1) {};
+        \draw (3,0) node[not port] (not1) {};
+        \draw (7.5,1.125) node[and port] (and2) {};
+        \draw (and1.out) -| (or1.in 2);
+        \draw (a) -| (or1.in 1);
+        \draw (b) -| (and1.in 1);
+        \draw (c) -| (and1.in 2);
+        \draw (d) -- (not1.in);
+        \draw (not1.out) -| (and2.in 2);
+        \draw (or1.out) -| (and2.in 1);
+        \draw (and2.out) -- ++(1,0) node[above,scale={1/0.7}] {$X$};
+    \end{circuitikz}
+\end{figure}
+
+就是这样——在实际生产中，只要有了这个图，设计实际的集成电路就简单了，只要把对应的符号换成门电路元件即可。
+
+\section*{二、小技巧}
+
+一般的组合逻辑电路设计步骤：人狠话不多，先暴力列真值表，然后直接写出逻辑式，一顿操作化简后，用最简式画出电路图；但这样做，却往往会花费不少时间在化简上，还可能忽略了潜在的更优设计。本章将给出几种常见的小技巧。
+
+\subsection*{利用无关项}
+
+无关项，指所对应的变量取值并不会出现在实际情况中的项。一般情况下，因为缺少定义，这些变量的值对应的输出无论是0还是1，都是合法的。（想到了C++中的\code{i=i++;}，无论编译器给出什么结果，都是符合规范的）
+
+考虑一个小例子：设计一个四舍五入器。输入是二进制下的一位整数，输出0（表示0）或1（表示10）。比如：$(A,B,C,D)=(0,1,1,1)$，则其对应整数7，而$\text{round}(7)=10$，所以输出$Y=1$。列出真值表：
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A$ & $B$ & $C$ & $D$ & $X$ \\\hline
+        0&0&0&0&0\\\hline
+        0&0&0&1&0\\\hline
+        0&0&1&0&0\\\hline
+        0&0&1&1&0\\\hline
+        0&1&0&0&0\\\hline
+        0&1&0&1&1\\\hline
+        0&1&1&0&1\\\hline
+        0&1&1&1&1\\\hline
+        1&0&0&0&1\\\hline
+        1&0&0&1&1\\\hline
+        1&0&1&0&$\times$\\\hline
+        1&0&1&1&$\times$\\\hline
+        1&1&0&0&$\times$\\\hline
+        1&1&0&1&$\times$\\\hline
+        1&1&1&0&$\times$\\\hline
+        1&1&1&1&$\times$\\\hline
+    \end{tabular}
+\end{figure}
+
+注意到，从$(A,B,C,D)=(1,0,1,0)$到$(A,B,C,D)=(1,1,1,1)$的取值都是没有意义的，因为其对应的十进制数大于9。我们从正常思路入手：
+
+\begin{equation*}
+\begin{aligned} 
+Y&=A'BC'D+A'BCD'+A'BCD+AB'C'D'+AB'C'D\\ 
+&=A'BD+A'BC+AB'C' 
+\end{aligned}
+\end{equation*}
+
+但是，应当知道这不一定是最简情况，因为我们没有利用那六种可以随意决定输出的取值。我们再次使用卡诺图：
+
+\begin{figure}
+\begin{tabular}{rc|c|c|c|}
+    \multirow{2}{*}{\backslashbox{$CD$}{$AB$}}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}\\
+    &\multicolumn{1}{r}{\makebox[2em]{00}}&\multicolumn{1}{r}{\makebox[2em]{01}}&\multicolumn{1}{r}{\makebox[2em]{11}}
+    &\multicolumn{1}{r}{\makebox[2em]{10}}\\\cline{2-5} 
+    \multicolumn{1}{r|}{00}&&&$\times$&$\checkmark$\\\cline{2-5} 
+    \multicolumn{1}{r|}{01}&&$\checkmark$&$\times$&$\checkmark$\\\cline{2-5} 
+    \multicolumn{1}{r|}{11}&&$\checkmark$&$\times$&$\times$\\\cline{2-5} 
+    \multicolumn{1}{r|}{10}&&$\checkmark$&$\times$&$\times$\\\cline{2-5} 
+\end{tabular}
+\end{figure}
+
+其中$\checkmark$是一定要圈到的地方（一定要使其为1）；$\times$是可圈可不圈（其值无所谓），并使得圈最大，最少。一番思索后，画出三个圈：
+
+\begin{figure}
+\begin{tabular}{rc|c|c|c|}
+    \multirow{2}{*}{\backslashbox{$CD$}{$AB$}}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}&\multicolumn{1}{r}{}\\
+    &\multicolumn{1}{r}{\makebox[2em]{00}}&\multicolumn{1}{r}{\makebox[2em]{01}}&\multicolumn{1}{r}{\makebox[2em]{11}}
+    &\multicolumn{1}{r}{\makebox[2em]{10}}\\\cline{2-5} 
+    \multicolumn{1}{r|}{00}&&                                   &$\times$\tikzmark{circ3start}  &$\checkmark$                           \\\cline{2-5} 
+    \multicolumn{1}{r|}{01}&&$\checkmark$\tikzmark{circ1start}  &$\times$                       &$\checkmark$                           \\\cline{2-5} 
+    \multicolumn{1}{r|}{11}&&$\checkmark$\tikzmark{circ2start}  &\tikzmark{circ1end}$\times$        &$\times$                           \\\cline{2-5} 
+    \multicolumn{1}{r|}{10}&&$\checkmark$                       &\tikzmark{circ2end}$\times$        &\tikzmark{circ3end}$\times$        \\\cline{2-5} 
+\end{tabular}
+
+\begin{tikzpicture}[remember picture,overlay]
+    \draw[rounded corners=10pt,thick,dashed]
+    ([shift={(-\tabcolsep-1em+0.5ex,2ex)}]pic cs:circ1start) rectangle
+    ([shift={(\tabcolsep+1em-0.5ex,-0.8ex)}]pic cs:circ1end);
+    \draw[rounded corners=10pt,thick,dashed,red]
+    ([shift={(-\tabcolsep-1em+0.5ex,2ex)}]pic cs:circ2start) rectangle
+    ([shift={(\tabcolsep+1em-0.5ex,-0.8ex)}]pic cs:circ2end);
+    \draw[rounded corners=10pt,thick,dashed,blue]
+    ([shift={(-\tabcolsep-1em+0.5ex,2ex)}]pic cs:circ3start) rectangle
+    ([shift={(\tabcolsep+1em-0.5ex,-0.8ex)}]pic cs:circ3end);
+\end{tikzpicture}
+\end{figure}
+
+此时的表达式，为$Y={\color{blue}A}+{\color{red}BC}+{BD}$。这从形式上便觉得简洁不少。后面的逻辑图略去。
+
+本来这一章准备了若干个技巧，但在漫长的拖延过程中忘记了。除此之外，应该还有一个“\textbf{利用集成电路}”，但发现各类集成电路仍未出场，所以留至下次。
+
+本章极短，为了将接下来整章留给各类组合逻辑器件与集成电路。
+\end{document}

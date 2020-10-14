@@ -1,0 +1,468 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{../Zhihu}
+\title{数字电路学习笔记（七）：经典组合逻辑器件（上）}
+\begin{document}
+\maketitle
+
+\section*{一、集成电路}
+
+在引入“集成电路”后，电路设计实现了从原子到分子的质变。集成电路，最重要的当然是“集成”二字了……总体来说，我们希望设计出的集成电路具有：
+
+\begin{itemize}
+\item 可复用
+\item 可扩展
+\item 高封装度
+\item 健壮（泛指其可靠性、安全性、一致性等）
+\end{itemize}
+
+等特点。从定义上说，每一个在此之前提到的电路都可以被做成一个集成电路；但这些只能叫做专用集成电路，被用在特定的设备中，不具有可复用性，所以不在本文讨论范围中。同时，由于文章目前进展到组合逻辑电路，因此涉及的几项电路也都是以组合逻辑为基础的，不会牵涉到时序逻辑等内容。
+
+与之前设计的朴素的电路不同，现实中的组合逻辑器件为了便于功能扩展，往往还有一些功能端口，可以控制是否输出，检测是否有输入等，实现与其他逻辑电路的配合。
+
+为探究几种常见的组合逻辑电路，我们从一个实际的例子入手：\textbf{计算器}。简单一点，我们的计算器先实现加法和减法。（不保证最终的成果和现实中的设计一致）这也是我在前言中展示的Minecraft电路所做的。大概的思路如下：
+
+
+这个东西只能做一位数的加法，但将它稍微扩展，就可以计算更多位数。我们还要忽略一些小细节，比如涉及存储的部分，以及二进制计算和十进制的转换（详见第二章关于“余三码”的介绍）。
+
+\section*{二、编码器}
+
+编码器能够将单一的输入信号编码。比如，计算机键盘按下一个键，就会被编码成一个八位的ASCII码。
+
+在计算器项目中，首先需要的，是把单一的“按钮输入”事件映射成一个二进制数。按钮板共有十个键，所以有十条输出，每条对应一个按钮。通过编码，可以将其变成易于逻辑理解的输入。由于目标是做计算，映射成二进制码（其实是BCD码）当然最为合理。（同样参见第二章：数制与编码）
+
+我们假设每次只输入一个信号，不会两路同时产生输入。那么真值表如下：
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $I_0$ & $I_1$ & $I_2$ & $I_3$ & $I_4$ & $I_5$ & $I_6$ & $I_7$ & $I_8$ & $I_9$ & $A$ & $B$ & $C$ & $D$\\\hline
+        1& & & & & & & & & &0&0&0&0\\\hline
+         &1& & & & & & & & &0&0&0&1\\\hline
+         & &1& & & & & & & &0&0&1&0\\\hline
+         & & &1& & & & & & &0&0&1&1\\\hline
+         & & & &1& & & & & &0&1&0&0\\\hline
+         & & & & &1& & & & &0&1&0&1\\\hline
+         & & & & & &1& & & &0&1&1&0\\\hline
+         & & & & & & &1& & &0&1&1&1\\\hline
+         & & & & & & & &1& &1&0&0&0\\\hline
+         & & & & & & & & &1&1&0&0&1\\\hline
+        0&0&0&0&0&0&0&0&0&0&0&0&0&0\\\hline
+    \end{tabular}
+    \caption*{未标注的表示为0}
+\end{figure}
+
+$ABCD$表示一个四位二进制数，从高位到低位。任何时候，列出真值表辅助分析都是个好习惯；但在这里，用真值表列式显然不现实。所以，直接分析：例如$B$，在$I_4,I_5,I_6,I_7$时为1，所以$B=I_4+I_5+I_6+I_7$（实际上，我们把其他项都当作了无关项，这会有一些隐藏的问题，后面分析）。同理：
+
+\begin{equation*}
+\begin{aligned}
+A&=I_8+I_9\\
+B&=I_4+I_5+I_6+I_7\\
+C&=I_2+I_3+I_6+I_7\\
+D&=I_1+I_3+I_5+I_7
+\end{aligned}
+\end{equation*}
+
+这样，我们的第一个编码器就做成了：
+
+\begin{figure}
+\begin{circuitikz}[scale=0.7,transform shape]
+    \node[left,scale={1/0.7}] at (0,{9*0.75}) (0) {$I_0$};
+    \node[left,scale={1/0.7}] at (0,{8*0.75}) (1) {$I_1$};
+    \node[left,scale={1/0.7}] at (0,{(7-0.3)*0.75}) (2) {$I_2$};
+    \node[left,scale={1/0.7}] at (0,{(6-0.3)*0.75}) (3) {$I_3$};
+    \node[left,scale={1/0.7}] at (0,{(5-0.3)*0.75}) (4) {$I_4$};
+    \node[left,scale={1/0.7}] at (0,{(4-0.3)*0.75}) (5) {$I_5$};
+    \node[left,scale={1/0.7}] at (0,{(3-0.3)*0.75}) (6) {$I_6$};
+    \node[left,scale={1/0.7}] at (0,{(2-0.15)*0.75}) (7) {$I_7$};
+    \node[left,scale={1/0.7}] at (0,{1*0.75}) (8) {$I_8$};
+    \draw (3,{1*0.75}) node[or port, anchor=in 1] (and3) {};
+    \draw (3,{(4-0.3)*0.75}) node[or port,number inputs=4, anchor=in 2] (and2) {};
+    \draw (3,{(6-0.3)*0.75}) node[or port,number inputs=4, anchor=in 2] (and1) {};
+    \draw (3,{8*0.75}) node[or port,number inputs=4, anchor=in 1] (and0) {};
+    \draw (0) -- ++(3,0);
+    \draw (1) -- ++(1.5,0) |- (and0.in 1);
+    \draw (2) -- ++(2,0) |- (and1.in 1);
+    \draw (3) -- ++(1,0) node (j3) {} |- (and0.in 2);
+    \draw (j3) to[short,*-] (and1.in 2);
+    \draw (5) -- ++(1.5,0) node (j5) {} |- (and0.in 3);
+    \draw (j5) to[short,*-] (and2.in 2);
+    \draw (4) -- ++(1,0) |- (and2.in 1);
+    \draw (6) -- ++(2,0) node (j6) {} |- (and1.in 3);
+    \draw (7) -- ++(2.5,0) node (j7) {} |- (and0.in 4);
+    \draw let \p1=(j6),\p2=(and2.in 3) in (and2.in 3) to[short,-*] (\x1,\y2);
+    \draw let \p1=(j7),\p2=(and1.in 4) in (and1.in 4) to[short,-*] (\x1,\y2);
+    \draw let \p1=(j7),\p2=(and2.in 4) in (and2.in 4) to[short,-*] (\x1,\y2);
+    \draw (8) -| (and3.in 1);
+    \draw (and3.in 2) -- ++(-3,0) node[left,scale={1/0.7}] {$I_9$};
+    \draw (and0.bout) -- ++(1,0) node[right,scale={1/0.7}] {$D$};
+    \draw (and1.bout) -- ++(1,0) node[right,scale={1/0.7}] {$C$};
+    \draw (and2.bout) -- ++(1,0) node[right,scale={1/0.7}] {$B$};
+    \draw (and3.bout) -- ++(1,0) node[right,scale={1/0.7}] {$A$};
+\end{circuitikz}
+\end{figure}
+
+这种简单的设计在绝大多数情况下就够用了，但有两个问题：
+
+我们假设每个时刻只有一路输入，但这是不靠谱的。比如，如果同时按下3和4，那么实际输出的是0111；
+我们不知道当输出是0000时，究竟表示的是按下了0，还是什么输入都没有。无论如何，让“0”输入直接吊着而不接进电路显然不好。
+
+\begin{figure}
+\begin{circuitikz}[scale=0.7,transform shape]
+    \node[left,scale={1/0.7}] at (0,{9*0.75}) (0) {$I_0$};
+    \node[left,scale={1/0.7}] at (0,{8*0.75}) (1) {$I_1$};
+    \node[left,scale={1/0.7}] at (0,{(7-0.3)*0.75}) (2) {$I_2$};
+    \node[left,scale={1/0.7}] at (0,{(6-0.3)*0.75}) (3) {$I_3$};
+    \node[left,scale={1/0.7}] at (0,{(5-0.3)*0.75}) (4) {$I_4$};
+    \node[left,scale={1/0.7}] at (0,{(4-0.3)*0.75}) (5) {$I_5$};
+    \node[left,scale={1/0.7}] at (0,{(3-0.3)*0.75}) (6) {$I_6$};
+    \node[left,scale={1/0.7}] at (0,{(2-0.15)*0.75}) (7) {$I_7$};
+    \node[left,scale={1/0.7}] at (0,{1*0.75}) (8) {$I_8$};
+    \draw (3,{1*0.75}) node[or port, anchor=in 1] (and3) {};
+    \draw (3,{(4-0.3)*0.75}) node[or port,number inputs=4, anchor=in 2] (and2) {};
+    \draw (3,{(6-0.3)*0.75}) node[or port,number inputs=4, anchor=in 2] (and1) {};
+    \draw (3,{8*0.75}) node[or port,number inputs=4, anchor=in 1] (and0) {};
+    \draw (0) -- ++(3,0);
+    \draw (1) -- ++(1.5,0) |- (and0.in 1);
+    \draw (2) -- ++(2,0) |- (and1.in 1);
+    \draw[color=green] (3) -- ++(1,0) node (j3) {} |- (and0.bin 2);
+    \draw[color=green] (j3) to[short,*-] (and1.bin 2);
+    \draw (5) -- ++(1.5,0) node (j5) {} |- (and0.in 3);
+    \draw (j5) to[short,*-] (and2.in 2);
+    \draw[color=green] (4) -- ++(1,0) |- (and2.bin 1);
+    \draw (6) -- ++(2,0) node (j6) {} |- (and1.in 3);
+    \draw (7) -- ++(2.5,0) node (j7) {} |- (and0.in 4);
+    \draw let \p1=(j6),\p2=(and2.in 3) in (and2.in 3) to[short,-*] (\x1,\y2);
+    \draw let \p1=(j7),\p2=(and1.in 4) in (and1.in 4) to[short,-*] (\x1,\y2);
+    \draw let \p1=(j7),\p2=(and2.in 4) in (and2.in 4) to[short,-*] (\x1,\y2);
+    \draw (8) -| (and3.in 1);
+    \draw (and3.in 2) -- ++(-3,0) node[left,scale={1/0.7}] {$I_9$};
+    \draw[color=green] (and0.bout) -- ++(1,0) node[right,scale={1/0.7}] {$\color{black}D$};
+    \draw[color=green] (and1.bout) -- ++(1,0) node[right,scale={1/0.7}] {$\color{black}C$};
+    \draw[color=green] (and2.bout) -- ++(1,0) node[right,scale={1/0.7}] {$\color{black}B$};
+    \draw (and3.bout) -- ++(1,0) node[right,scale={1/0.7}] {$A$};
+\end{circuitikz}
+\caption*{输入3，4的样子；要注意这不是3+4，而只是无意义的输出，比如3和5的输出也是0111}
+\end{figure}
+
+问题1的解决方法是优先编码：如果同时按下两个键，则只编码比较大的数，而忽视较小的数，相当于把真值表变成：
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $I_0$ & $I_1$ & $I_2$ & $I_3$ & $I_4$ & $I_5$ & $I_6$ & $I_7$ & $I_8$ & $I_9$ & $A$ & $B$ & $C$ & $D$\\\hline
+        1& & & & & & & & & &0&0&0&0\\\hline
+        $\times$&1& & & & & & & & &0&0&0&1\\\hline
+        $\times$&$\times$&1& & & & & & & &0&0&1&0\\\hline
+        $\times$&$\times$&$\times$&1& & & & & & &0&0&1&1\\\hline
+        $\times$&$\times$&$\times$&$\times$&1& & & & & &0&1&0&0\\\hline
+        $\times$&$\times$&$\times$&$\times$&$\times$&1& & & & &0&1&0&1\\\hline
+        $\times$&$\times$&$\times$&$\times$&$\times$&$\times$&1& & & &0&1&1&0\\\hline
+        $\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&1& & &0&1&1&1\\\hline
+        $\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&1& &1&0&0&0\\\hline
+        $\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&$\times$&1&1&0&0&1\\\hline
+        0&0&0&0&0&0&0&0&0&0&0&0&0&0\\\hline
+    \end{tabular}
+    \caption*{未标注的表示为0}
+\end{figure}
+
+这样，如果按下3和4，则输出0100，3则被当成了无关项，不影响输出。虽然这使得电路变复杂了，但提升了健壮性，符合设计方针，是值得的。
+
+问题2的解决方法自然是把所有位加在一起，单独作为一路输出——只要这路有输出，就代表有输入。
+
+略过计算过程（可以作为练习），我们最终得到的，就是一个类似这样的电路：
+
+\begin{figure}
+\begin{circuitikz}[scale=0.7,transform shape]
+    \draw (13,16) node[and port, number inputs=5, anchor=out] (and1) {};
+    \draw (13,14.5) node[and port, number inputs=4, anchor=out] (and2) {};
+    \draw (13,13) node[and port, number inputs=3, anchor=out] (and3) {};
+    \draw (13,11.5) node[and port, number inputs=2, anchor=out] (and4) {};
+    \draw (14,13) node[or port, number inputs=5, anchor=in 3] (or1) {};
+    \draw (13,9) node[and port, number inputs=3, anchor=out] (and5) {};
+    \draw (13,7) node[and port, number inputs=3, anchor=out] (and6) {};
+    \draw (13,3) node[or port, number inputs=4, anchor=out] (or2) {};
+    \draw (14,8) node[or port, number inputs=4, anchor=in 1] (or3) {};
+    \draw (16.5,5) node[and port, number inputs=3, anchor=in 3] (and7) {};
+    \draw (16.5,3) node[and port, number inputs=3, anchor=in 3] (and8) {};
+    \draw (13,1.286) node[or port, number inputs=2, anchor=out] (or4) {};
+    \draw (13,-1) node[or port, number inputs=10, anchor=in 1, inner inputs=3] (input) {};
+
+    \draw (0,15) node[left,scale={1/0.7}] (i0) {$I_0$} to[short] ++(3,0) node (i0o) {};
+    \draw (0,14) node[left,scale={1/0.7}] (i1) {$I_1$} to[short,-*] ++(3.5,0) node (i1o) {};
+    \draw (0,13) node[left,scale={1/0.7}] (i2) {$I_2$} to[short] ++(4,0) node (i2o) {};
+    \draw (i2)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (2') {};
+    \draw[color=green] (2'.bout) to[short] (4.5,12) node (i2i) {} |- (and1.bin 2);
+    \draw (0,11) node[left,scale={1/0.7}] (i3) {$I_3$} to[short,-*] ++(5,0) node (i3o) {};
+    \draw (0,10) node[left,scale={1/0.7}] (i4) {$I_4$} to[short] ++(5.5,0) node (i4o) {};
+    \draw (i4)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (4') {};
+    \draw[color=green] (4'.bout) to[short,-*] (6,9) node (i4i) {};
+    \draw (0,8) node[left,scale={1/0.7}] (i5) {$I_5$} to[short,-*] ++(6.5,0) node (i5o) {};
+    \draw (i5)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (5') {};
+    \draw[color=green] (5'.bout) to[short] (7,7) node (i5i) {};
+    \draw (0,6) node[left,scale={1/0.7}] (i6) {$I_6$} to[short,-*] ++(7.5,0) node (i6o) {};
+    \draw (i6)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (6') {};
+    \draw[color=green] (6'.bout) to[short] (8,5) node (i6i) {};
+    \draw (0,4) node[left,scale={1/0.7}] (i7) {$I_7$} to[short,-*] ++(8.5,0) node (i7o) {};
+    \draw (0,3) node[left,scale={1/0.7}] (i8) {$I_8$} to[short] ++(9,0) node (i8o) {};
+    \draw (i8)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (8') {};
+    \draw[color=green] (8'.bout) -- (9.5,2) node (i8i) {};
+    \draw (0,1) node[left,scale={1/0.7}] (i9) {$I_9$} to[short,-*] (10,1) node (i9o) {};
+    \draw (i9)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (9') {};
+    \draw[color=green] (9'.bout) -- (10.5,0) node (i9i) {};
+
+    \draw (i1o)+(0,0) |- (and1.bin 1);
+    \draw[color=green] (i4i)+(0,0) |- (and1.bin 3);
+    \draw[color=green] (i6i)+(0,0) |- (and1.bin 4);
+    \draw[color=green] (i8i)+(0,0) |- (and1.bin 5);
+    \draw (i3o)+(0,0) |- (and2.bin 1);
+    \draw[color=green] let \p1=(i4i),\p2=(and2.bin 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(i6i),\p2=(and2.bin 3) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(i8i),\p2=(and2.bin 4) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw (i5o)+(0,0) |- (and3.bin 1);
+    \draw[color=green] let \p1=(i6i),\p2=(and3.bin 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(i8i),\p2=(and3.bin 3) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw (i7o)+(0,0) |- (and4.bin 1);
+    \draw[color=green] let \p1=(i8i),\p2=(and4.bin 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and4.out) in (i9o)+(0,0) |- (\x1,10) -| (or1.in 5);
+    \draw (and1.out) -| (or1.in 1);
+    \draw (and2.out) |- (or1.in 2);
+    \draw (and3.out) -- (or1.in 3);
+    \draw (and4.out) |- (or1.in 4);
+    
+    \draw let \p1=(i2o),\p2=(and5.in 1) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(i4i),\p2=(and5.in 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] (i5i)+(0,0) |- (and5.in 3);
+    \draw let \p1=(i3o),\p2=(and6.in 1) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(i5i),\p2=(and6.in 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw[color=green] (i4i)+(0,0) |- (and6.in 3);
+
+    \draw let \p1=(i4o),\p2=(or2.bin 1) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw let \p1=(i5o),\p2=(or2.bin 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw let \p1=(i6o),\p2=(or2.bin 3) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw let \p1=(i7o),\p2=(or2.bin 4) in (\x2,\y2) to[short,-*] (\x1,\y2);
+
+    \draw (and5.out) |- (or3.in 1);
+    \draw (and6.out) |- (or3.in 2);
+    \draw let \p1=(and6.out),\p2=(i6o) in (\x2,\y2) to[short] ({\x1+0.5cm},\y2) |- (or3.in 3);
+    \draw let \p1=(or3.in 4),\p2=(i6o),\p3=(i7o) in (\x1,\y1) to[short] (\x1,{\y2-0.5cm}) to[short,-*] (\x3,{\y2-0.5cm});
+
+    \draw[color=green] let \p1=(and8.bin 1),\p2=(and7.bin 3) in (\x2,\y2) to[short] ({\x2-0.5cm},\y2) to[short] ({\x2-0.5cm},\y1) to[short] (\x1,\y1);
+    \draw[color=green] let \p1=(and8.bin 2),\p2=(and7.bin 2) in (\x2,\y2) to[short] ({\x2-1cm},\y2) to[short] ({\x2-1cm},\y1) to[short] (\x1,\y1);
+    \draw (or2.out) to[short] (and8.in 3);
+    \draw (or3.out) -| (and7.in 1);
+    \draw[color=green] let \p1=(i8i),\p2=(and7.bin 2) in ({\x2-1cm},{\y2-0.7cm}) to[short,*-*] (\x1,{\y2-0.7cm});
+    \draw[color=green] let \p1=(i9i),\p2=(and7.bin 3) in ({\x2-0.5cm},{\y2-0.8cm}) to[short,*-] (\x1,{\y2-0.8cm}) node (j) {};
+    \draw[color=green] (i9i) to[short] (j)+(0,0);
+
+    \draw let \p1=(i8o),\p2=(or4.bin 1) in (\x2,\y2) to[short,-*] (\x1,\y2);
+    \draw let \p1=(i9o),\p2=(or4.bin 2) in (\x2,\y2) to[short,-*] (\x1,\y2);
+
+    \draw (i0o)+(0,0) |- (input.in 10);
+    \draw (i1o)+(0,0) |- (input.in 9);
+    \draw (i2o)+(0,0) |- (input.in 8);
+    \draw (i3o)+(0,0) |- (input.in 7);
+    \draw (i4o)+(0,0) |- (input.in 6);
+    \draw (i5o)+(0,0) |- (input.in 5);
+    \draw (i6o)+(0,0) |- (input.in 4);
+    \draw (i7o)+(0,0) |- (input.in 3);
+    \draw (i8o)+(0,0) |- (input.in 2);
+    \draw (i9o)+(0,0) |- (input.in 1);
+
+    \draw let \p1=(or1.out) in (or1.out) --     (19,\y1) node[right,scale={1/0.7}] {$A$};
+    \draw let \p1=(and7.out) in (and7.out) --   (19,\y1) node[right,scale={1/0.7}] {$B$};
+    \draw let \p1=(and8.out) in (and8.out) --   (19,\y1) node[right,scale={1/0.7}] {$C$};
+    \draw let \p1=(or4.out) in (or4.out) --     (19,\y1) node[right,scale={1/0.7}] {$D$};
+    \draw let \p1=(input.out) in (input.out) -- (19,\y1) node[right,scale={1/0.7}] {$Y$};
+\end{circuitikz}
+\end{figure}
+
+它是两个集成电路的奇怪混搭。首先是\textbf{74HC147}，它是10线-4线编码器，将10条线路输入编码成4位的二进制数，类似本电路实现的功能；然后是\textbf{74HC148}，是8线-3线编码器，所以只能编码0...7的数字，但有不少扩展端口，所以比起74HC147，通用性更高，可以几个连在一起实现更多位数的编码。它有检测是否有输入的功能。
+
+这样，我们完成了计算器的第一部分：把按钮输入对应成一个能够计算的二进制数。
+
+\section*{三、译码器}
+
+与编码器相对，译码器把一个二进制码译回单一的输出。在本项目的最后，也需要将计算出的数字译回0...9，方便由屏幕的驱动器再做计算。真值表如下：
+
+\begin{figure}
+    \setlength\doublerulesep{0.8pt}
+    \begin{tabular}{|c|c|c|c||c|c|c|c|c|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A$ & $B$ & $C$ & $D$ & $O_0$ & $O_1$ & $O_2$ & $O_3$ & $O_4$ & $O_5$ & $O_6$ & $O_7$ & $O_8$ & $O_9$\\\hline
+        0&0&0&0&1& & & & & & & & & \\\hline
+        0&0&0&1& &1& & & & & & & & \\\hline
+        0&0&1&0& & &1& & & & & & & \\\hline
+        0&0&1&1& & & &1& & & & & & \\\hline
+        0&1&0&0& & & & &1& & & & & \\\hline
+        0&1&0&1& & & & & &1& & & & \\\hline
+        0&1&1&0& & & & & & &1& & & \\\hline
+        0&1&1&1& & & & & & & &1& & \\\hline
+        1&0&0&0& & & & & & & & &1& \\\hline
+        1&0&0&1& & & & & & & & & &1\\\hline
+    \end{tabular}
+\end{figure}
+
+$O_{0..9}$的推导没什么意义，不列出了。几个例子：
+\begin{equation*}
+\begin{cases}
+O_0=A'B'C'D'\\
+O_1=A'B'C'D\\
+O_2=A'B'CD'
+\end{cases}
+\end{equation*}
+
+所以，如果输入的是0111，输出就是$O_7$。
+
+常用的译码集成电路是\textbf{74HC138}，翻译的是0...7之间的数字。它有一个很有意思的性质，就是八个输出正好对应八个最小项（回顾笔记（五）：逻辑设计基础），可以用来拼接逻辑函数，比如$A'BC'+ABC$，就直接将$O_2$与$O_7$用或门接在一起即可。但在我们的体系中没有什么用处，因为我们只强调设计电路而不强调利用已有的电路。
+
+\section*{四、数据分配器}
+
+注意到我们的输入不仅是一个数字，还包括“现在正在输入第\_\_\_\_\_个数字”这个开关。（这是我觉得我这个设计中不合理的地方，在后期有“加减乘除”多个运算后，这个开关会用按下对应的运算按钮代替。）这个开关，决定了究竟是由第一路还是第二路编码/存储模块处理输入的信号。这里，就运用了数据分配器。
+
+数据分配器有两组输入：第一组只有一路，是待分配的数据；第二组是一个数（“地址码”），表示将这位数据分配到哪一路上。在我们的设计中，只需要1分2，输入一位地址码即可，0表示“上路”，1表示“下路”。
+
+如果输入数据$D$和地址码$A$，输出$O_0$或$O_1$，那么真值表是：
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|}\hline\rowcolor{lightgray}
+        $D$ & $A$ & $O_0$ & $O_1$ \\\hline
+        0&0&0&0\\\hline
+        0&1&0&0\\\hline
+        1&0&1&0\\\hline
+        1&1&0&1\\\hline
+    \end{tabular}
+\end{figure}
+
+所以
+
+\begin{equation*}
+\begin{cases}
+O_0=DA'\\
+O_1=DA
+\end{cases}
+\end{equation*}
+
+\begin{figure}
+\begin{circuitikz}[scale=0.7,transform shape]
+    \node[left,scale={1/0.7}] at (0,2) (d) {$D$};
+    \node[left,scale={1/0.7}] at (0,0) (a) {$A$};
+    \draw (6,2) node[and port,anchor=out] (and1) {};
+    \draw (6,0) node[and port,anchor=out] (and2) {};
+    \draw (0,2) to[short,-*] ++(1,0) |- (and1.in 1);
+    \draw (1,2) |- (and2.in 1);
+    \draw let \p1=(and1.in 2) in (0,0) to[short,-*] (1.5,0) |- (1.5,\y1) node[not port,anchor=in] (not1) {};
+    \draw[color=green] (not1.bout) -- (and1.bin 2);
+    \draw (1.5,0) |- (and2.in 2);
+    \draw (and1.bout) -- ++(1,0) node[right] {$O_0$};
+    \draw (and2.bout) -- ++(1,0) node[right] {$O_1$};
+\end{circuitikz}
+\end{figure}
+
+Simple as that.
+
+会发现，没有专门做“数据分配器”的集成电路，这是因为所有的数据分配器都可以用带控制端口的译码器实现——比如前文提到的\textbf{74HC138}。它的控制端口如果有输入信号，则输出被锁定在高电平。
+
+思考，如果将$D$连在控制端口，而三位地址码$A_2A_1A_0$连在输入端口，那么，当$A_2A_1A_0=011$时，$D$取0或1，在$O_5$端口分别有什么输出？$O_0$呢？
+
+\section*{五、数据选择器}
+
+虽然在本项目中没有用到数据选择器，但既然都有了分配器，它就没有道理不出场。选择器和分配器相对，负责按照输入的地址码，从几路输入中选择一路作为输出。
+
+以8选1选择器为例。它需要八位数据输入和三位地址码，输出一位。顺便介绍一种简化真值表的方法：
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A_2$ & $A_1$ & $A_0$ & $O$ \\\hline
+        0&0&0&$D_0$\\\hline
+        0&0&1&$D_1$\\\hline
+        0&1&0&$D_2$\\\hline
+        0&1&1&$D_3$\\\hline
+        1&0&0&$D_4$\\\hline
+        1&0&1&$D_5$\\\hline
+        1&1&0&$D_6$\\\hline
+        1&1&1&$D_7$\\\hline
+    \end{tabular}
+\end{figure}
+
+略作分析：$O$与哪一个$D$有关，取决于$A_2A_1A_0$的值；比如，$A_2A_1A_0=000$时，$O$只和$D_0$有关。因此，
+
+\[O=D_0A_2'A_1'A_0'+D_1A_2'A_1'A_0+D_2A_2'A_1A_0'+D_3A_2'A_1A_0+\cdots+D_7A_2A_1A_0\]
+
+\begin{figure}
+\begin{circuitikz}[scale=0.7,transform shape]
+    \draw (0,6) node[left,scale={1/0.7}] (a2) {$A_2$}; 
+    \draw (0,4) node[left,scale={1/0.7}] (a1) {$A_1$};
+    \draw (0,2) node[left,scale={1/0.7}] (a0) {$A_0$};  
+    \draw (a2)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (a2') {};
+    \draw (a1)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (a1') {};
+    \draw (a0)++(1,0) to[short,*-] ++(0,-1) node[not port,anchor=in] (a0') {};
+    \draw (4,-1) node[and port, number inputs=4, rotate=-90] (and1) {};
+    \draw (6,-1) node[and port, number inputs=4, rotate=-90] (and2) {};
+    \draw (8,-1) node[and port, number inputs=4, rotate=-90] (and3) {};
+    \draw (10,-1)  node[and port, number inputs=4, rotate=-90] (and4) {};
+    \draw (12,-1)  node[and port, number inputs=4, rotate=-90] (and5) {};
+    \draw (14,-1)  node[and port, number inputs=4, rotate=-90] (and6) {};
+    \draw (16,-1)  node[and port, number inputs=4, rotate=-90] (and7) {};
+    \draw (18,-1)  node[and port, number inputs=4, rotate=-90] (and8) {};
+
+    \draw[color=green] (a2'.bout)+(0,0) -| (and4.bin 2);
+    \draw[color=green] (a1'.bout)+(0,0) -| (and6.bin 3);
+    \draw[color=green] (a0'.bout)+(0,0) -| (and7.bin 4);
+    \draw (a2)+(0.4,0) -| (and8.bin 2);
+    \draw (a1)+(0.4,0) -| (and8.bin 3);
+    \draw (a0)+(0.4,0) -| (and8.bin 4);
+
+    \draw let \p1=(and7.bin 3),\p2=(a1) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and7.bin 2),\p2=(a2) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and6.bin 4),\p2=(a0) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and6.bin 2),\p2=(a2) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and5.bin 4),\p2=(a0'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and5.bin 3),\p2=(a1'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and5.bin 2),\p2=(a2) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and4.bin 4),\p2=(a0) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and4.bin 3),\p2=(a1) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and3.bin 4),\p2=(a0'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and3.bin 3),\p2=(a1) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and3.bin 2),\p2=(a2'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw let \p1=(and2.bin 4),\p2=(a0) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and2.bin 3),\p2=(a1'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and2.bin 2),\p2=(a2'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and1.bin 4),\p2=(a0'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and1.bin 3),\p2=(a1'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    \draw[color=green] let \p1=(and1.bin 2),\p2=(a2'.bout) in (\x1,\y1) to[short,-*] (\x1,\y2);
+    
+    \draw (and1.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_0$};
+    \draw (and2.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_1$};
+    \draw (and3.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_2$};
+    \draw (and4.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_3$};
+    \draw (and5.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_4$};
+    \draw (and6.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_5$};
+    \draw (and7.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_6$};
+    \draw (and8.in 1) -- ++(0,7) node[above,scale={1/0.7}] {$D_7$};
+\end{circuitikz}
+\end{figure}
+
+这便是\textbf{74HC151}的结构。另一个常用的选择器是双4选1选择器\textbf{74HC153}。
+
+\divider
+
+总结：本文介绍了四类逻辑器件：
+
+\begin{itemize}
+\item 编码器
+\item 译码器
+\item 数据分配器
+\item 数据选择器
+\end{itemize}
+
+同时介绍了五个常用集成电路：
+
+\begin{itemize}
+\item 74HC147（10线-4线编码器）
+\item 74HC148（8线-3线编码器）
+\item 74HC138（3线-8线译码器）
+\item 74HC151（8选1选择器）
+\item 74HC153（双4选1选择器）
+\end{itemize}
+
+在这些器件的结构推导中，有意忽略了一些额外的控制端，以不影响行文逻辑的连贯性。这些端口可以很轻松地集成进来，而不影响主体的工作。
+
+与计算相关的器件，留至下期。
+\end{document}

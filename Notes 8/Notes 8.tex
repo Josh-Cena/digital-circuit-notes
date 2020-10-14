@@ -1,0 +1,503 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{../Zhihu}
+\title{数字电路学习笔记（八）：计算电路}
+\begin{document}
+\maketitle
+
+好吧，标题不对仗了......本文是笔记（七）：经典组合逻辑器件（上）的后续，主要讲两类与计算相关的逻辑电路：加法器与比较器。
+
+\section*{一、加法器}
+
+\subsection*{1. 半加器}
+
+最最基础的加法器，能做一位比特的加法，也就是$A+B=\overline{CO}$这样的形式，（此处的加号是货真价实的“加法”，而不是或逻辑），其中$C$是进位(carry)。二进制下，加法符合：
+\[\begin{matrix} 0+0=00,&0+1=01\\ 1+0=01,&1+1=10 \end{matrix}\]
+
+因此列出真值表：
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A$&$B$&$C$&$O$\\\hline
+        0&0&0&0\\\hline
+        0&1&0&1\\\hline
+        1&0&0&1\\\hline
+        1&1&1&0\\\hline
+    \end{tabular}
+\end{figure}
+
+其实在笔记（三）：基本逻辑中，已经提到过，异或逻辑是二进制下的加法运算——此处我们也可以发现，$O=A\oplus B$。另外还得出$C=AB$。
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \draw (-3,3) node[and port] (and1) {};
+        \draw (-3,1.5) node[xor port] (xor1) {};
+        \draw (and1.in 2)++(-2,0) node[left,scale={1/0.7}] {$A$} -| ([xshift=-1cm]and1.in 1) -- (and1.in 1);
+        \draw (xor1.in 1)++(-2,0) node[left,scale={1/0.7}] {$B$} -- (xor1.in 1);
+        \draw (xor1.in 1)++(-0.5,0) to[short,*-] ([xshift=-0.5cm]and1.in 2) -- (and1.in 2);
+        \draw (and1.in 2)++(-1,0) to[short,*-] ([xshift=-1cm]xor1.in 2) -- (xor1.in 2);
+        \draw (and1.bout) -- ++(0.5,0) node[right,scale={1/0.7}] {$C$};
+        \draw (xor1.bout) -- ++(0.5,0) node[right,scale={1/0.7}] {$O$};
+
+        \draw (-3,-1) node[and port] (and1) {};
+        \draw (-3,-2.5) node[xor port] (xor1) {};
+        \draw (and1.in 2)++(-2,0) node[left,scale={1/0.7}] {$A$} -| ([xshift=-1cm]and1.in 1) -- (and1.in 1);
+        \draw[color=green] (xor1.in 1)++(-2,0) node[left,scale={1/0.7},black] {$B$} -- (xor1.in 1);
+        \draw[color=green] (xor1.in 1)++(-0.5,0) to[short,*-] ([xshift=-0.5cm]and1.in 2) -- (and1.in 2);
+        \draw (and1.in 2)++(-1,0) to[short,*-] ([xshift=-1cm]xor1.in 2) -- (xor1.in 2);
+        \draw (and1.bout) -- ++(0.5,0) node[right,scale={1/0.7}] {$C$};
+        \draw[color=green] (xor1.bout) -- ++(0.5,0) node[right,scale={1/0.7},black] {$O$};
+
+        \draw (3,3) node[and port] (and1) {};
+        \draw (3,1.5) node[xor port] (xor1) {};
+        \draw[color=green] (and1.in 2)++(-2,0) node[left,scale={1/0.7},black] {$A$} -| ([xshift=-1cm]and1.in 1) -- (and1.in 1);
+        \draw (xor1.in 1)++(-2,0) node[left,scale={1/0.7}] {$B$} -- (xor1.in 1);
+        \draw (xor1.in 1)++(-0.5,0) to[short,*-] ([xshift=-0.5cm]and1.in 2) -- (and1.in 2);
+        \draw[color=green] (and1.in 2)++(-1,0) to[short,*-] ([xshift=-1cm]xor1.in 2) -- (xor1.in 2);
+        \draw (and1.bout) -- ++(0.5,0) node[right,scale={1/0.7}] {$C$};
+        \draw[color=green] (xor1.bout) -- ++(0.5,0) node[right,scale={1/0.7},black] {$O$};
+
+        \draw (3,-1) node[and port] (and1) {};
+        \draw (3,-2.5) node[xor port] (xor1) {};
+        \draw[color=green] (and1.in 2)++(-2,0) node[left,scale={1/0.7},black] {$A$} -| ([xshift=-1cm]and1.in 1) -- (and1.in 1);
+        \draw[color=green] (xor1.in 1)++(-2,0) node[left,scale={1/0.7},black] {$B$} -- (xor1.in 1);
+        \draw[color=green] (xor1.in 1)++(-0.5,0) to[short,*-] ([xshift=-0.5cm]and1.in 2) -- (and1.in 2);
+        \draw[color=green] (and1.in 2)++(-1,0) to[short,*-] ([xshift=-1cm]xor1.in 2) -- (xor1.in 2);
+        \draw[color=green] (and1.bout) -- ++(0.5,0) node[right,scale={1/0.7},black] {$C$};
+        \draw (xor1.bout) -- ++(0.5,0) node[right,scale={1/0.7}] {$O$};
+    \end{circuitikz}
+\end{figure}
+
+这幅图中展示了四种输入情况时不同的输出。
+
+\subsection*{2. 多位加法器}
+
+一位加法器并不能使我们满足。如果我们要做的加法不止一位，比如，计算1101+0111时，如果是手算，那就会列竖式：
+\[\begin{matrix} &1&1&0&1\\ +&0&1&1&1\\ &{\scriptstyle 1}&{\scriptstyle 1}&{\scriptstyle 1}\\ \hline 1&0&1&0&0 \end{matrix}\]
+
+发现其实中间几位在做加法时，需要加三个数字，而不只是两个。考虑一个四比特的加法：
+\[\begin{matrix} &A_3&A_2&A_1&A_0\\ +&B_3&B_2&B_1&B_0\\ &{\scriptstyle(C_2)}&\scriptstyle(C_1)&\scriptstyle(C_0)\\ \hline C_3&O_3&O_2&O_1&O_0 \end{matrix}\]
+
+除了最低一位，其他每一位都需要处理三项输入：两个数位和一个来自低位的进位。前一节中的加法器只能有两个输入，只能处理最低一位，对于其他位，我们需要增加一个输入，也就是来自更低位的进位信号。这样，才能实现加法的扩展。完成的运算是：$A+B+C_i=\overline{C_oO}$
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A$&$B$&$C_i$&$O$&$C_o$\\\hline
+        0&0&0&0&0\\\hline
+        0&0&1&1&0\\\hline
+        0&1&0&1&0\\\hline
+        0&1&1&0&1\\\hline
+        1&0&0&1&0\\\hline
+        1&0&1&0&1\\\hline
+        1&1&0&0&1\\\hline
+        1&1&1&1&1\\\hline
+    \end{tabular}
+\end{figure}
+\[\begin{aligned} O&=A\oplus B\oplus C_i\\ C_o&=AB+BC_i+AC_i=AB+(A+B)C_i \end{aligned}\]
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \draw (0.5,6) node[left,scale={1/0.7}] {$A$} to[short,-*] ++(2,0) node (a) {};
+        \draw (0.5,5) node[left,scale={1/0.7}] {$B$} to[short,-*] ++(1.5,0) node (b) {};
+        \draw (0.5,4) node[left,scale={1/0.7}] {$C_i$} to[short,-*] ++(1,0) node (c) {};
+        \draw (4,8) node[xor port,number inputs=3,anchor=in 1] (xor1) {};
+        \draw (3,4) node[and port,anchor=in 2] (and1) {};
+        \draw (and1.out) to[short] ++(0.5,0) node[or port,anchor=in 1] (or2) {};
+        \draw (3,2) node[or port,anchor=in 2] (or1) {};
+        \draw (or1.out) to[short] ++(0,0) node[and port,anchor=in 1] (and2) {};
+        \draw let \p1=(and2.out),\p2=(or2.in 2) in (\x1,\y1) |- (\x2,{\y1+1cm}) -- (\x2,\y2);
+        \draw (c)+(0,0) |- (and2.in 2);
+        \draw (b)+(0,0) |- (or1.in 2);
+        \draw (a)+(0,0) |- (or1.in 1);
+        \draw (a)+(0,0) |- (xor1.in 3);
+        \draw (b)+(0,0) |- (xor1.in 2);
+        \draw (c)+(0,0) |- (xor1.in 1);
+        \draw (and1.in 2) to[short,-*] ++(-1,0);
+        \draw (and1.in 1) to[short,-*] ++(-0.5,0);
+        \draw let \p1=(xor1.out) in (xor1.out) -- (8,\y1) node[right,scale={1/0.7}] {$O$};
+        \draw let \p1=(or2.out) in (or2.out) -- (8,\y1) node[right,scale={1/0.7}] {$C_o$};
+    \end{circuitikz}
+\end{figure}
+
+按我的习惯，会像这样表示这个加法器：
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{multipoles/thickness=3}
+        \ctikzset{multipoles/dipchip/width=1.8}
+        \draw (0,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7}](C){$\displaystyle\sum$};
+        \draw (C.bpin 2) node[right, scale={1/0.7}] {$A$} -- ++(-1,0);
+        \draw (C.bpin 4) node[right, scale={1/0.7}] {$B$} -- ++(-1,0);
+        \draw (C.bpin 8) node[left , scale={1/0.7}] {$O$} -- ++(1,0);
+        \draw (C.n) node[below, scale={1/0.7}] {$C_i$} -- ++(0,1);
+        \draw (C.s) node[above, scale={1/0.7}] {$C_o$} -- ++(0,-1);
+    \end{circuitikz}
+\end{figure}
+
+这便是一位加法器的抽象。如何将其扩展为更多位的加法器？回到加法的竖式：
+\[\begin{matrix} &A_3&A_2&A_1&A_0\\ +&B_3&B_2&B_1&B_0\\ &\scriptstyle(C_2)&\scriptstyle(C_1)&\scriptstyle(C_0)\\ \hline C_3&O_3&O_2&O_1&O_0 \end{matrix}\]
+
+对于每一位输出，将更低位的进位和这一位对应的两个输入相加，然后把进位传递给更高位即可。这是加法器的简单“串联”。注意到，由于在上图的表示中，进位在侧面，连线时就不会和其他的输入数位混淆。
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{multipoles/thickness=3}
+        \ctikzset{multipoles/dipchip/width=1.8}
+        \draw (0,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90](C1){$\displaystyle\sum$};
+        \draw (C1.bpin 2) -- ++(0,1) node[above, scale={1/0.7}] {$A_0$};
+        \draw (C1.bpin 4) -- ++(0,1) node[above, scale={1/0.7}] {$B_0$};
+        \draw (C1.bpin 8) -- ++(0,-1)node[below, scale={1/0.7}] {$O_0$};
+        \draw (C1.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0) node[right,scale={1/0.7}] {0};
+        \draw (C1.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C2){$\displaystyle\sum$};
+        \draw (C2.bpin 2) -- ++(0,1) node[above, scale={1/0.7}] {$A_1$};
+        \draw (C2.bpin 4) -- ++(0,1) node[above, scale={1/0.7}] {$B_1$};
+        \draw (C2.bpin 8) -- ++(0,-1)node[below, scale={1/0.7}] {$O_1$};
+        \draw (C2.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C2.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C3){$\displaystyle\sum$};
+        \draw (C3.bpin 2) -- ++(0,1) node[above, scale={1/0.7}] {$A_2$};
+        \draw (C3.bpin 4) -- ++(0,1) node[above, scale={1/0.7}] {$B_2$};
+        \draw (C3.bpin 8) -- ++(0,-1)node[below, scale={1/0.7}] {$O_2$};
+        \draw (C3.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C3.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C3){$\displaystyle\sum$};
+        \draw (C3.bpin 2) -- ++(0,1) node[above, scale={1/0.7}] {$A_3$};
+        \draw (C3.bpin 4) -- ++(0,1) node[above, scale={1/0.7}] {$B_3$};
+        \draw (C3.bpin 8) -- ++(0,-1)node[below, scale={1/0.7}] {$O_3$};
+        \draw (C3.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C3.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node (c) {};
+        \draw let \p1=(C3.bpin 8),\p2=(c) in (c)+(0,0) -- (\x2,{\y1-1cm}) node[below,scale={1/0.7}] {$C$};
+    \end{circuitikz}
+\end{figure}
+
+举个例子，输入$(A_3A_2A_1A_0)=1101,\,(B_3B_2B_1B_0)=0111$，则输出$(CO_3O_2O_1O_0)=10100$，也就是13+7=20。
+
+此时设计出的电路就是\textbf{74HC283}（虽然它采用的是超前进位而不是串行进位，但这种技术细节不是非常重要）。它能做四比特的加法——许多计算类的电路都以四比特为单位，因为四比特刚好是一个十进制或十六数字的长度。
+
+\subsection*{3. 减法器}
+计算减法，不必再使用新的元件。回顾在笔记（二）：数制与编码中所提到的“补码”：
+\[A-B=A+B'+1\]
+
+所以，如果需要做减法运算，实际上需要做两步：1. 将减数取反；2. 整体+1。其中+1一步甚至不需再做一次加法——注意到在加法器中，最低位仍然有一个低位进位$C_i$，只是默认被置为了0。如果将其置为1，则能很方便地将最终的和加一。因此，在上图中的串行加法器上略作修改，添加一位输入$M$，其为0时，电路作加法；值为1时，电路作减法。（小技巧：异或门可以用于作原变量-反变量选择器）
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{multipoles/thickness=3}
+        \ctikzset{multipoles/dipchip/width=1.8}
+        \draw (0,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90](C1){$\displaystyle\sum$};
+        \draw (C1.bpin 2) -- ++(0,3) node[above, scale={1/0.7}] {$A_0$};
+        \draw (C1.bpin 4) node[xor port, anchor=out, rotate=-90] (xor1) {};
+        \draw let \p1=(xor1.in 1), \p2=(C1.bpin 2) in (\x1,\y1) -- (\x1,{\y2+3cm}) node[above, scale={1/0.7}] {$B_0$}; 
+        \draw (xor1.in 2) to[short, *-] ++(0,0);
+        \draw (C1.bpin 8) -- ++(0,-1) node[below, scale={1/0.7}] {$O_0$};
+        \draw (C1.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0) node[right,scale={1/0.7}] {};
+        \draw (C1.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C2){$\displaystyle\sum$};
+        \draw (C2.bpin 2) -- ++(0,3) node[above, scale={1/0.7}] {$A_1$};
+        \draw (C2.bpin 4) node[xor port, anchor=out, rotate=-90] (xor1) {};
+        \draw let \p1=(xor1.in 1), \p2=(C1.bpin 2) in (\x1,\y1) -- (\x1,{\y2+3cm}) node[above, scale={1/0.7}] {$B_1$}; 
+        \draw (xor1.in 2) to[short, *-] ++(0,0);
+        \draw (C2.bpin 8) -- ++(0,-1) node[below, scale={1/0.7}] {$O_1$};
+        \draw (C2.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C2.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C3){$\displaystyle\sum$};
+        \draw (C3.bpin 2) -- ++(0,3) node[above, scale={1/0.7}] {$A_2$};
+        \draw (C3.bpin 4) node[xor port, anchor=out, rotate=-90] (xor1) {};
+        \draw let \p1=(xor1.in 1), \p2=(C1.bpin 2) in (\x1,\y1) -- (\x1,{\y2+3cm}) node[above, scale={1/0.7}] {$B_2$}; 
+        \draw (xor1.in 2) to[short, *-] ++(0,0);
+        \draw (C3.bpin 8) -- ++(0,-1) node[below, scale={1/0.7}] {$O_2$};
+        \draw (C3.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C3.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node[dipchip,
+        num pins=10, hide numbers, no topmark,
+        external pins width=0,scale={1/0.7},rotate=-90,anchor=n](C3){$\displaystyle\sum$};
+        \draw (C3.bpin 2) -- ++(0,3) node[above, scale={1/0.7}] {$A_3$};
+        \draw (C3.bpin 4) node[xor port, anchor=out, rotate=-90] (xor1) {};
+        \draw let \p1=(xor1.in 1), \p2=(C1.bpin 2) in (\x1,\y1) -- (\x1,{\y2+3cm}) node[above, scale={1/0.7}] {$B_3$}; 
+        \draw (xor1.in 2) to[short, *-] ++(0,0);
+        \draw (C3.bpin 8) -- ++(0,-1) node[below, scale={1/0.7}] {$O_3$};
+        \draw (C3.n) node[left, scale={1/0.7}] {$C_i$} -- ++(1,0);
+        \draw (C3.s) node[right, scale={1/0.7}] {$C_o$} -- ++(-1,0) node (c) {};
+        \draw let \p1=(C3.bpin 8),\p2=(c) in (c)+(0,0) -- (\x2,{\y1-1cm}) node[below,scale={1/0.7}] {$C$};
+        \draw (xor1.in 2) -| ([shift={(1,0)}]C1.n);
+        \draw let \p1=(C1.n), \p2=(xor1.in 2), \p3=(C1.bpin 2) in ({\x1+1cm},\y2) to[short,*-] ({\x1+1cm},{\y3+3cm}) node[above, scale={1/0.7}] {$M$};
+    \end{circuitikz}
+\end{figure}
+
+\section*{二、比较器}
+
+为了做运算，除了做加减法，还要能做比较——比较器能比较两个数的数值大小。两个数$A,\,B$作比较，有三种情况：$A>B,\,A=B,\,A<B$。每种情况，都用一位输出表示。
+
+\begin{figure}
+    \begin{tabular}{|c|c|c|c|c|}\hline\rowcolor{lightgray}
+        $A$&$B$&$Y_{A>B}$&$Y_{A=B}$&$Y_{A<B}$\\\hline
+        0&0&0&1&0\\\hline
+        0&1&0&0&1\\\hline
+        1&0&1&0&0\\\hline
+        1&1&0&1&0\\\hline
+    \end{tabular}
+\end{figure}
+
+\[\begin{cases} Y_{A>B}=AB'\\ Y_{A=B}=A\odot B\\ Y_{A<B}=A'B \end{cases}\]
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \draw (3,5.5) node[and port, anchor=out] (and1) {};
+        \draw (3.5,4) node[xnor port, anchor=out] (xor1) {};
+        \draw (3,2.5) node[and port, anchor=out] (and2) {};
+        \draw (and1.bin 1) node[notcirc,left] {};
+        \draw (and2.bin 1) node[notcirc,left] {};
+        \draw (and2.in 1) |- (and1.in 2);
+        \draw (and1.in 1) -- ++(-0.5,0) |- (and2.in 2);
+        \draw let \p1=(xor1.in 1),\p2=(and1.in 1) in (\x1,\y1) to[short,-*] (\x2,\y1) node (a) {};
+        \draw let \p1=(xor1.in 2),\p2=(and2.in 1) in (\x1,\y1) to[short,-*] ({\x2-0.5cm},\y1) node (b) {};
+        \draw let \p1=(a) in (\x1,\y1) -- (-1,\y1) node[left,scale={1/0.7}] {$A$};
+        \draw let \p1=(b) in (\x1,\y1) -- (-1,\y1) node[left,scale={1/0.7}] {$B$};
+        \draw let \p1=(and1.out) in (\x1,\y1) -- (4,\y1) node[right,scale={1/0.7}] {$Y_{A>B}$};
+        \draw[green] let \p1=(xor1.bout) in (\x1,\y1) -- (4,\y1) node[black,right,scale={1/0.7}] {$Y_{A=B}$};
+        \draw let \p1=(and2.out) in (\x1,\y1) -- (4,\y1) node[right,scale={1/0.7}] {$Y_{A<B}$};
+    \end{circuitikz}
+\end{figure}
+
+拓展到更多位数，我们会发现有优先级的存在：如果高位之间已经能比出大小，就没有必要比较更低的位数了——只有在高位相同的情况下，才需要接着比下一位。以比较$A_3A_2A_1A_0$与$B_3B_2B_1B_0$为例，不妨直接写出它的逻辑式：
+\[\begin{aligned} Y_{A>B}&=Y_{A_3>B_3}+Y_{A_3=B_3}Y_{A_2>B_2}+Y_{A_3=B_3}Y_{A_2=B_2}Y_{A_1>B_1}\\ &\qquad+Y_{A_3=B_3}Y_{A_2=B_2}Y_{A_1=B_1}Y_{A_0>B_0}\\ &=A_3B_3'+(A_3\odot B_3)A_2B_2'+(A_3\odot B_3)(A_2\odot B_2)A_1B_1'\\ &\qquad+(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)A_0B_0'\\\\ Y_{A=B}&=Y_{A_3=B_3}Y_{A_2=B_2}Y_{A_1=B_1}Y_{A_0=B_0}\\ &=(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)(A_0\odot B_0)\\\\ Y_{A<B}&=Y_{A_3<B_3}+Y_{A_3=B_3}Y_{A_2<B_2}+Y_{A_3=B_3}Y_{A_2=B_2}Y_{A_1<B_1}\\ &\qquad+Y_{A_3=B_3}Y_{A_2=B_2}Y_{A_1=B_1}Y_{A_0<B_0}\\ &=A_3'B_3+(A_3\odot B_3)A_2'B_2+(A_3\odot B_3)(A_2\odot B_2)A_1'B_1\\ &\qquad+(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)A_0'B_0\\ \end{aligned}\]
+
+（此公式虽然看着恐怖如斯，但仔细分析，原理非常简单）
+
+同时，和加法器的设计准则一致，为了保证可扩展性，还要再加入一个考虑，就是更低位之间的关系。为此，再加入三个端口：$I_{A>B},\,I_{A=B},\,I_{A<B}$。
+
+\[\begin{aligned} Y_{A>B}&=A_3B_3'+(A_3\odot B_3)A_2B_2'+(A_3\odot B_3)(A_2\odot B_2)A_1B_1'\\ &\qquad+(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)A_0B_0'\\ &\qquad+I_{A>B}(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)(A_0\odot B_0)\\\\ Y_{A=B}&=I_{A=B}(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)(A_0\odot B_0)\\\\ Y_{A<B}&=A_3'B_3+(A_3\odot B_3)A_2'B_2+(A_3\odot B_3)(A_2\odot B_2)A_1'B_1\\ &\qquad+(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)A_0'B_0\\ &\qquad+I_{A<B}(A_3\odot B_3)(A_2\odot B_2)(A_1\odot B_1)(A_0\odot B_0)\\  \end{aligned}\]
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \draw (3,5.5) node[and port, anchor=out] (and1) {};
+        \draw (3.5,4) node[xnor port, anchor=out] (xor1) {};
+        \draw (3,2.5) node[and port, anchor=out] (and2) {};
+        \draw (and1.bin 1) node[notcirc,left] {};
+        \draw (and2.bin 1) node[notcirc,left] {};
+        \draw (and2.in 1) |- (and1.in 2);
+        \draw (and1.in 1) -- ++(-0.5,0) |- (and2.in 2);
+        \draw let \p1=(xor1.in 1),\p2=(and1.in 1) in (\x1,\y1) to[short,-*] (\x2,\y1) node (a) {};
+        \draw let \p1=(xor1.in 2),\p2=(and2.in 1) in (\x1,\y1) to[short,-*] ({\x2-0.5cm},\y1) node (b) {};
+        \draw let \p1=(a) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$A_3$};
+        \draw let \p1=(b) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$B_3$};
+
+        \draw (3,1) node[and port, anchor=out] (and3) {};
+        \draw (3.5,-0.5) node[xnor port, anchor=out] (xor2) {};
+        \draw (3,-2) node[and port, anchor=out] (and4) {};
+        \draw (and3.bin 1) node[notcirc,left] {};
+        \draw (and4.bin 1) node[notcirc,left] {};
+        \draw (and4.in 1) |- (and3.in 2);
+        \draw (and3.in 1) -- ++(-0.5,0) |- (and4.in 2);
+        \draw let \p1=(xor2.in 1),\p2=(and3.in 1) in (\x1,\y1) to[short,-*] (\x2,\y1) node (a) {};
+        \draw let \p1=(xor2.in 2),\p2=(and4.in 1) in (\x1,\y1) to[short,-*] ({\x2-0.5cm},\y1) node (b) {};
+        \draw let \p1=(a) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$A_2$};
+        \draw let \p1=(b) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$B_2$};
+
+        \draw (3,-5) node[and port, anchor=out] (and5) {};
+        \draw (3.5,-6.5) node[xnor port, anchor=out] (xor3) {};
+        \draw (3,-8) node[and port, anchor=out] (and6) {};
+        \draw (and5.bin 1) node[notcirc,left] {};
+        \draw (and6.bin 1) node[notcirc,left] {};
+        \draw (and6.in 1) |- (and5.in 2);
+        \draw (and5.in 1) -- ++(-0.5,0) |- (and6.in 2);
+        \draw let \p1=(xor3.in 1),\p2=(and5.in 1) in (\x1,\y1) to[short,-*] (\x2,\y1) node (a) {};
+        \draw let \p1=(xor3.in 2),\p2=(and6.in 1) in (\x1,\y1) to[short,-*] ({\x2-0.5cm},\y1) node (b) {};
+        \draw let \p1=(a) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$A_1$};
+        \draw let \p1=(b) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$B_1$};
+
+        \draw (3,-9.5) node[and port, anchor=out] (and7) {};
+        \draw (3.5,-11) node[xnor port, anchor=out] (xor4) {};
+        \draw (3,-12.5) node[and port, anchor=out] (and8) {};
+        \draw (and7.bin 1) node[notcirc,left] {};
+        \draw (and8.bin 1) node[notcirc,left] {};
+        \draw (and8.in 1) |- (and7.in 2);
+        \draw (and7.in 1) -- ++(-0.5,0) |- (and8.in 2);
+        \draw let \p1=(xor4.in 1),\p2=(and7.in 1) in (\x1,\y1) to[short,-*] (\x2,\y1) node (a) {};
+        \draw let \p1=(xor4.in 2),\p2=(and8.in 1) in (\x1,\y1) to[short,-*] ({\x2-0.5cm},\y1) node (b) {};
+        \draw let \p1=(a) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$A_0$};
+        \draw let \p1=(b) in (\x1,\y1) -- (-0.5,\y1) node[left,scale={1/0.7}] {$B_0$};
+
+        \draw (11,4.5)   node[and port                               ] (a1) {};
+        \draw (11,2.5)   node[and port,number inputs=3               ] (a2) {};
+        \draw (11,0.5)   node[and port,number inputs=4,inner inputs=3] (a3) {};
+        \draw (11,-1.5)  node[and port,number inputs=5,inner inputs=3] (a4) {};
+        \draw (11,-3.5)  node[and port,number inputs=5,inner inputs=3] (a5) {};
+        \draw (11,-5.5)  node[and port,number inputs=5,inner inputs=3] (a6) {};
+        \draw (11,-7.5)  node[and port,number inputs=4,inner inputs=3] (a7) {};
+        \draw (11,-9.5)  node[and port,number inputs=3               ] (a8) {};
+        \draw (11,-11.5) node[and port                               ] (a9) {};
+
+        \draw[color=green] let \p1=(xor1.bout),\p2=(a1.bin 1),\p3=(a9.bin 1) in (\x1,\y1) -| (4,  \y2) -- (\x2,\y2) (4  ,\y1) to[short,*-] (4  ,\y3) -- (\x3,\y3);
+        \draw              let \p1=(and2.bout)                               in (\x1,\y1) -- (4.5,\y1);
+        \draw              let \p1=(and3.bout),\p2=(a1.bin 2)                in (\x1,\y1) -| (5,  \y2) -- (\x2,\y2);
+        \draw[color=green] let \p1=(xor2.bout),\p2=(a2.bin 2),\p3=(a8.bin 2) in (\x1,\y1) -| (5.5,\y2) -- (\x2,\y2) (5.5,\y1) to[short,*-] (5.5,\y3) -- (\x3,\y3);
+        \draw              let \p1=(and4.bout),\p2=(a9.bin 2)                in (\x1,\y1) -| (6,  \y2) -- (\x2,\y2);
+        \draw              let \p1=(and5.bout),\p2=(a2.bin 3)                in (\x1,\y1) -| (6.5,\y2) -- (\x2,\y2);
+        \draw[color=green] let \p1=(xor3.bout),\p2=(a3.bin 3),\p3=(a7.bin 3) in (\x1,\y1) -| (7,  \y2) -- (\x2,\y2) (7  ,\y1) to[short,*-] (7  ,\y3) -- (\x3,\y3);
+        \draw              let \p1=(and6.bout),\p2=(a8.bin 3)                in (\x1,\y1) -| (7.5,\y2) -- (\x2,\y2);
+        \draw              let \p1=(and7.bout),\p2=(a3.bin 4)                in (\x1,\y1) -| (8,  \y2) -- (\x2,\y2);
+        \draw[color=green] let \p1=(xor4.bout),\p2=(a4.bin 5)                in (\x1,\y1) -| (8.5,\y2) -- (\x2,\y2);
+        \draw              let \p1=(and8.bout),\p2=(a7.bin 4)                in (\x1,\y1) -| (9,  \y2) -- (\x2,\y2);
+
+        \foreach \j in {2,...,8}
+            \draw[color=green] let \p1=(a\j.bin 1) in (\x1,\y1) to[short,-*] (4,\y1);
+        \foreach \j in {3,...,7}
+            \draw[color=green] let \p1=(a\j.bin 2) in (\x1,\y1) to[short,-*] (5.5,\y1);
+        \foreach \j in {4,...,6}
+            \draw[color=green] let \p1=(a\j.bin 4) in (\x1,\y1) to[short,-*] (7,\y1);
+        \foreach \j in {5,...,6}
+            \draw[color=green] let \p1=(a\j.bin 5) in (\x1,\y1) to[short,-*] (8.5,\y1);
+
+        \draw              (-0.5,-3) node[left, scale={1/0.7}] {$I_{A>B}$} -- (7.5,-3) |- (a4.bin 3);
+        \draw[color=green] (-0.5,-3.5) node[left, scale={1/0.7},black] {$I_{A=B}$} -- (7.5,-3.5) -- (a5.bin 3);
+        \draw              (-0.5,-4) node[left, scale={1/0.7}] {$I_{A<B}$} -- (7.5,-4) |- (a6.bin 3);
+
+        \draw (a2.out) -- ++(1,0) node[or port, number inputs=5, anchor=in 3, inner inputs=3] (o1) {};
+        \draw (a8.out) -- ++(1,0) node[or port, number inputs=5, anchor=in 3, inner inputs=3] (o2) {};
+        \draw (and1.out) -| (o1.in 1);
+        \draw (a1.out) |- (o1.in 2);
+        \draw (a3.out) |- (o1.in 4);
+        \draw (a4.out) -| (o1.in 5);
+        \draw (a6.out) -| (o2.in 1);
+        \draw (a7.out) |- (o2.in 2);
+        \draw (a9.out) |- (o2.in 4);
+        \draw (4.5,2.5) -- (4.5,-12.3) -| (o2.in 5);
+
+        \draw let \p1=(o1.out) in (\x1,\y1) -- (15.5,\y1) node[right, scale={1/0.7}] {$Y_{A>B}$};
+        \draw[color=green] let \p1=(a5.bout) in (\x1,\y1) -- (15.5,\y1) node[right, scale={1/0.7}, black] {$Y_{A=B}$};
+        \draw let \p1=(o2.out) in (\x1,\y1) -- (15.5,\y1) node[right, scale={1/0.7}] {$Y_{A<B}$};
+    \end{circuitikz}
+    \caption*{事实上，此电路无论什么时候，$I_{A>B}$，$I_{A=B}$和$I_{A<B}$三个输入必有一个为高电平，即使是最低一位，$I_{A=B}$也应置为高电平，这样才能正常输出}
+\end{figure}
+
+这就是四位比较器\textbf{74HC85}的内部逻辑。
+
+\section*{三、算术逻辑单元 (ALU)}
+
+算术逻辑单元 (Arithmetic Logic Unit) 是计算机中实现数值和逻辑的基础元件——它不是实现某一特定功能的元件，而是许多功能的集合。在前文中实现了所有需要的元件之后，我们可以尝试做出一个1比特ALU。它能执行的指令包括：
+\begin{codeblock}
+ADD    X1,  X2,  X3     //加法
+SUB    X1,  X2,  X3     //减法
+AND    X1,  X2,  X3     //按位与
+ORR    X1,  X2,  X3     //按位或
+\end{codeblock}
+每一个指令都要接受两个参数。我们先设计按位与和按位或：每个用一个逻辑门实现，然后再用一个2选1选择器决定是使用哪个输出。
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \draw (2,2) node[and port] (and1) {};
+        \draw (2,0) node[or port] (or1) {};
+        \draw (and1.in 1) -- ++(-2,0) node[left, scale={1/0.7}] (a) {$A$};
+        \draw (or1.in 2) -- ++(-2,0) node[left, scale={1/0.7}] (b) {$B$};
+        \draw (and1.in 1) to[short,-*] ++(-1,0) |- (or1.in 1);
+        \draw (or1.in 2) to[short,-*] ++(-0.5,0) |- (and1.in 2);
+        \draw (and1.out) -- ++(1,0) node[and port, anchor=in 1] (and2) {};
+        \draw (or1.out) -- ++(1,0) node[and port, anchor=in 1] (and3) {};
+        \node[notcirc, left] at (and2.bin 2) {};
+        \draw (and2.in 2) to[short,-*] ++(-0.5,0) |- (and3.in 2);
+        \draw ([shift={(-0.5,0)}]and2.in 2) -- ++(0,1.5) node[above, scale={1/0.7}] {Op};
+        \draw (7.5,1) node[or port] (or2) {};
+        \draw (and2.out) |- (or2.in 1);
+        \draw (and3.out) |- (or2.in 2);
+    \end{circuitikz}
+\end{figure}
+这个电路当操作符Op为0时，输出$A\cdot B$；为1时，输出$A+B$。接下来，可以增添加法功能：
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{multipoles/dipchip/width=2};
+        \ctikzset{chips/scale=0.5};
+        \draw (2,2) node[and port, anchor=bin 1] (and1) {};
+        \draw (2,0) node[or port, anchor=bin 1] (or1) {};
+        \draw (2,-2) node[dipchip, num pins=10, hide numbers, no topmark,
+        external pins width=0, anchor=bpin 1] (sum) {$\displaystyle\sum$};
+        \draw (and1.bin 1) -- ++(-1.5,0) |- (sum.bpin 2);
+        \draw (and1.bin 2) -- ++(-1,0) |- (sum.bpin 4);
+        \draw (and1.bin 1)++(-1.5,0) to[short,*-] ++(-1,0) node[left,scale={1/0.7}] {$A$};
+        \draw (sum.bpin 4)++(-1,0) to[short,*-] ++(-1.5,0) node[left,scale={1/0.7}] {$B$};
+        \draw (or1.bin 1) to[short,-*] ++(-1.5,0);
+        \draw (or1.bin 2) to[short,-*] ++(-1,0);
+        \draw (sum.n) -- ++(0,0.5) -- ++(1,0) -- ++(0,4) node[above,scale={1/0.7}] {$C_i$};
+        \draw (sum.s) -- ++(0,-1) node[below,scale={1/0.7}] {$C_o$};
+        \draw (and1.out)   -- ++(2,0) node[and port, anchor=in 1, number inputs=3] (and2) {};
+        \draw (or1.out)    -- ++(2,0) node[and port, anchor=in 1, number inputs=3] (and3) {};
+        \draw (sum.pin 8) --++(2.4,0) node[and port, anchor=in 1, number inputs=3] (and4) {};
+        \node[notcirc, left] at (and2.bin 2) {};
+        \node[notcirc, left] at (and2.bin 3) {};
+        \node[notcirc, left] at (and3.bin 3) {};
+        \node[notcirc, left] at (and4.bin 2) {};
+        \draw (and4.in 2) -| ++(-0.5,5.5) node[above,scale={1/0.7},xshift=-5pt] {Op};
+        \draw (and3.in 2) to[short,-*] ++(-0.5,0);
+        \draw (and2.in 2) to[short,-*] ++(-0.5,0);
+        \draw (and4.in 3) -| ++(-1,5.9);
+        \draw (and3.in 3) to[short,-*] ++(-1,0);
+        \draw (and2.in 3) to[short,-*] ++(-1,0);
+        \draw (and3.out) -- ++(1,0) node[or port, number inputs=3, anchor=in 2] (out) {};
+        \draw (and2.out) |- (out.in 1);
+        \draw (and4.out) |- (out.in 3);
+    \end{circuitikz}
+\end{figure}
+把2选1选择器扩充为了4选1，并且Op操作符也变成了两位。Op=00，做\code{AND A, B}；Op=01，做\code{ORR A, B}；Op=10，做\code{ADD A, B}。 现在ALU也拥有了进位输入输出，可以将其串联，扩展为更多位的运算。
+
+我们继续增添减法功能。由于之前说过，减法不过是将$B$取反，并在最低位的进位输入1；所以对于每一个ALU，我们先将$B$取反即可。同时，既然这个电路可以将$B$取反，我们自然也想将$A$取反。这样，我们可以实现更复杂的运算，比如或非运算：$(A+B)'=A'B'$。
+
+\begin{figure}
+    \begin{circuitikz}[scale=0.7,transform shape]
+        \ctikzset{multipoles/dipchip/width=2};
+        \ctikzset{chips/scale=0.5};
+        \draw (2,2) node[and port, anchor=bin 1] (and1) {};
+        \draw (2,0) node[or port, anchor=bin 1] (or1) {};
+        \draw (2,-2) node[dipchip, num pins=10, hide numbers, no topmark,
+        external pins width=0, anchor=bpin 1] (sum) {$\displaystyle\sum$};
+        \draw (and1.bin 1) -- ++(-1.5,0) |- (sum.bpin 2);
+        \draw (and1.bin 2) -- ++(-1,0) |- (sum.bpin 4);
+        \draw (and1.bin 1)++(-1.5,0) to[short,*-] ++(0,0) node[xor port, anchor=out] (ai) {};
+        \draw (sum.bpin 4)++(-1,0) to[short,*-] ++(-0.5,0) node[xor port, anchor=out] (bi) {};
+        \draw (ai.in 1) -- ++(-1.5,0) node[left,scale={1/0.7}] {$A$};
+        \draw (bi.in 1) -- ++(-1.5,0) node[left,scale={1/0.7}] {$B$};
+        \draw (ai.in 2) -- ++(0,1) node[above,scale={1/0.7}] {$\text{In}_A$};
+        \draw (bi.in 2) -| ++(-1,5.8) node[above,scale={1/0.7}] {$\text{In}_B$};
+        \draw (or1.bin 1) to[short,-*] ++(-1.5,0);
+        \draw (or1.bin 2) to[short,-*] ++(-1,0);
+        \draw (sum.n) -- ++(0,0.5) -- ++(1,0) -- ++(0,4) node[above,scale={1/0.7}] {$C_i$};
+        \draw (sum.s) -- ++(0,-1) node[below,scale={1/0.7}] {$C_o$};
+        \draw (and1.out)   -- ++(2,0) node[and port, anchor=in 1, number inputs=3] (and2) {};
+        \draw (or1.out)    -- ++(2,0) node[and port, anchor=in 1, number inputs=3] (and3) {};
+        \draw (sum.pin 8) --++(2.4,0) node[and port, anchor=in 1, number inputs=3] (and4) {};
+        \node[notcirc, left] at (and2.bin 2) {};
+        \node[notcirc, left] at (and2.bin 3) {};
+        \node[notcirc, left] at (and3.bin 3) {};
+        \node[notcirc, left] at (and4.bin 2) {};
+        \draw (and4.in 2) -| ++(-0.5,5.5) node[above,scale={1/0.7},xshift=-5pt] {Op};
+        \draw (and3.in 2) to[short,-*] ++(-0.5,0);
+        \draw (and2.in 2) to[short,-*] ++(-0.5,0);
+        \draw (and4.in 3) -| ++(-1,5.9);
+        \draw (and3.in 3) to[short,-*] ++(-1,0);
+        \draw (and2.in 3) to[short,-*] ++(-1,0);
+        \draw (and3.out) -- ++(1,0) node[or port, number inputs=3, anchor=in 2] (out) {};
+        \draw (and2.out) |- (out.in 1);
+        \draw (and4.out) |- (out.in 3);
+    \end{circuitikz}
+\end{figure}
+其中$\text{In}_A$和$\text{In}_B$表示了是否对$A$和$B$取反。至此，我们实现了与、或、加、减等几个ALU的基本功能。比如，要做减法，应输入$\text{Op}=10,\,\text{In}_A=0,\,\text{In}_B=1$。我们令ALU控制指令为$(\text{In}_A,\,\text{In}_B,\,\text{Op})$，则有效指令和对应运算的关系如下：
+
+\begin{itemize}
+\item 0000: \code{A & B}
+\item 0001: \code{A | B}
+\item 0010: \code{A + B}
+\item 0110: \code{A - B}
+\end{itemize}
+
+当然，实际的ALU的功能不止于此。在未来，会真正设计一个完整的ALU。
+
+至此，我们介绍完了所有常见的组合逻辑电路，并在这其中反复展示了我们是如何一步步从需求到电路实现的，还演示了几次如何利用现有的集成电路实现更多功能。我们已经有了实现一个计算机所需要的最关键的部分之一——计算单元。从下一章开始，我们将会开始关注CPU中另一个灵魂所在——\textit{时钟和时序电路}。
+\end{document}

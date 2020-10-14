@@ -1,0 +1,142 @@
+%Chinese fonts
+\xeCJKsetup{CJKmath=true,CheckSingle=true}
+\setCJKmainfont[BoldFont=Heiti SC Medium,ItalicFont=Kaiti SC]{Heiti SC Light}
+
+%Basic packages
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage[a4paper,left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm]{geometry}
+\usepackage{xcolor}
+\usepackage{etoolbox}
+\usepackage{atbegshi,ifthen}
+\usepackage{fontspec}
+\setmainfont{CMU Serif}
+
+%Basic page settings
+\setlength{\parskip}{1ex}
+
+%Section and subsection
+\CTEXsetup[format={\Large\bfseries}]{section}
+\CTEXsetup[format={\large\bfseries}]{subsection}
+
+%For convenience of drawing figures and tables
+\usepackage{tikz,circuitikz}
+\usepackage{diagbox,colortbl,booktabs,multirow}
+\ctikzset{logic ports=ieee}
+\usetikzlibrary{calc,tikzmark}
+
+%Code block
+%Provides environment "codeblock" for code block, and command \code for inline code
+\usepackage{listings}
+\usepackage{fontspec}
+\setmonofont{Menlo}
+\definecolor{superlightgray}{rgb}{0.95,0.95,0.95}
+\lstset{basicstyle=\ttfamily,frame=single, framerule=0pt, backgroundcolor=\color{superlightgray}}
+\lstnewenvironment{codeblock}{\bigskip}{\bigskip}
+\tikzstyle{highlighter} = [superlightgray, line width=\baselineskip]
+\newcounter{highlight}[page]
+\newcommand{\tikzhighlightanchor}[1]{\ensuremath{\vcenter{\hbox{\tikz[remember picture, overlay]{\coordinate (#1 highlight \arabic{highlight});}}}}}
+\newcommand{\bh}[0]{\stepcounter{highlight}\tikzhighlightanchor{begin}}
+\newcommand{\eh}[0]{\tikzhighlightanchor{end}}
+\AtBeginShipout{\AtBeginShipoutUpperLeft{\ifthenelse{\value{highlight} > 0}{\tikz[remember picture, overlay]{\foreach \stroke in {1,...,\arabic{highlight}} \draw[highlighter] (begin highlight \stroke) -- (end highlight \stroke);}}{}}}
+\makeatletter
+\newtoggle{@InInlineListing}
+\togglefalse{@InInlineListing}
+\renewcommand\lstinline[1][]{%
+    \leavevmode\bgroup\toggletrue{@InInlineListing}\bh%
+    \def\lst@boxpos{b}%
+    \lsthk@PreSet\lstset{flexiblecolumns,#1}%
+    \lsthk@TextStyle
+    \@ifnextchar\bgroup{\afterassignment\lst@InlineG \let\@let@token}%
+    \lstinline@
+}
+\def\lst@LeaveAllModes{%
+    \ifnum\lst@mode=\lst@nomode
+        \expandafter\lsthk@EndGroup\iftoggle{@InInlineListing}{\eh{}}{}%
+    \else
+        \expandafter\egroup\expandafter\lst@LeaveAllModes
+    \fi%
+}
+\makeatother
+\newcommand*{\code}{\lstinline[columns=fixed]}
+
+%Quote
+%Provides environment "quote" for quote
+\usepackage{mdframed}
+\renewenvironment{quote}{%
+    \bigskip
+    \begin{mdframed}[
+        topline=false,
+        rightline=false,
+        bottomline=false,
+        innertopmargin=0.4em,
+        innerbottommargin=0.4em,
+        innerrightmargin=0.7em,
+        rightmargin=0.7em,
+        innerleftmargin=0.7em,
+        leftmargin=0.7em,
+        linewidth=.2em,
+        linecolor=gray
+    ]
+    \color{gray}
+}{%
+    \end{mdframed}%
+    \bigskip
+}
+
+%Lists
+\usepackage{enumitem}
+\setenumerate[1]{itemsep=-4pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+\setitemize[1]{itemsep=-4pt,partopsep=0pt,parsep=\parskip,topsep=5pt}
+
+%Bibliography
+%Reformats \cite and "thebibliography"
+\def\thebibliography#1{%
+    \section*{参考}%
+    \list{
+        [\arabic{enumi}]
+    }{
+        \settowidth\labelwidth{[#1]
+    }\leftmargin\labelwidth\advance\leftmargin\labelsep\usecounter{enumi}
+}
+\def\newblock{\hskip .11em plus .33em minus .07em}
+\sloppy\clubpenalty4000\widowpenalty4000 \sfcode`\.=1000\relax}
+\let\oldcite=\cite
+\renewcommand{\cite}[1]{\textsuperscript{\oldcite{#1}}}
+
+%Divider
+%Provides command \divider
+\newcommand{\divider}{\begin{center}\vspace{2em}\color{lightgray}{\rule[2em]{7cm}{0.05em}}\end{center}}
+
+%Figures
+%Reformats "figure"
+\usepackage[font={small,color=gray}]{caption}
+\makeatletter
+\appto{\@floatboxreset}{\centering}
+\renewcommand*{\fps@figure}{H}
+\makeatother
+
+%Links & cards
+\usepackage[colorlinks,linkcolor=black,urlcolor=black,citecolor=blue]{hyperref}
+\let\oldref=\href
+\let\oldurl=\url
+\renewcommand{\href}[2]{\underline{\oldref{#1}{#2}}}
+\renewcommand{\url}[1]{\underline{\oldurl{#1}}}
+\urlstyle{same}
+\makeatletter
+\def\UrlAlphabet{%
+\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j%
+\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t%
+\do\u\do\v\do\w\do\x\do\y\do\z\do\A\do\B\do\C\do\D%
+\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M\do\N%
+\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X%
+\do\Y\do\Z}
+\def\UrlDigits{\do\1\do\2\do\3\do\4\do\5\do\6\do\7\do\8\do\9\do\0}
+\g@addto@macro{\UrlBreaks}{\UrlOrds}
+\g@addto@macro{\UrlBreaks}{\UrlAlphabet}
+\g@addto@macro{\UrlBreaks}{\UrlDigits}
+\makeatother
+
+\author{JoshCena}
+\date{}
