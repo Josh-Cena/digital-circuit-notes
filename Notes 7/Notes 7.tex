@@ -266,10 +266,10 @@ D&=I_1+I_3+I_5+I_7
     \draw (i8o)+(0,0) |- (input.in 2);
     \draw (i9o)+(0,0) |- (input.in 1);
 
-    \draw let \p1=(or1.out) in (or1.out) --     (19,\y1) node[right,scale={1/0.7}] {$A$};
-    \draw let \p1=(and7.out) in (and7.out) --   (19,\y1) node[right,scale={1/0.7}] {$B$};
-    \draw let \p1=(and8.out) in (and8.out) --   (19,\y1) node[right,scale={1/0.7}] {$C$};
-    \draw let \p1=(or4.out) in (or4.out) --     (19,\y1) node[right,scale={1/0.7}] {$D$};
+    \draw let \p1=(or1.out) in (or1.out) --     (19,\y1) node[right,scale={1/0.7}] {$D$};
+    \draw let \p1=(and7.out) in (and7.out) --   (19,\y1) node[right,scale={1/0.7}] {$C$};
+    \draw let \p1=(and8.out) in (and8.out) --   (19,\y1) node[right,scale={1/0.7}] {$B$};
+    \draw let \p1=(or4.out) in (or4.out) --     (19,\y1) node[right,scale={1/0.7}] {$A$};
     \draw let \p1=(input.out) in (input.out) -- (19,\y1) node[right,scale={1/0.7}] {$Y$};
 \end{circuitikz}
 \end{figure}
